@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using NextPlay.Data;
-using NextPlay.Models;
+using api.Data;
+using api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
