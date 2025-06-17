@@ -1,0 +1,37 @@
+# --- .NET ---
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+*.vs/
+*.nupkg
+*.snupkg
+project.lock.json
+project.assets.json
+project.nuget.cache
+*.AssemblyReference.cache
+*.GeneratedMSBuildEditorConfig.editorconfig
+*.g.props
+*.g.targets
+*.props
+*.targets
+*.json
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+.env
+.env.local
+npm-debug.log
+pnpm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# --- VSCode ---
+.vscode/
+
+# --- Mac OS ---
+.DS_Store
