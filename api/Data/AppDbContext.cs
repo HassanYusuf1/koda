@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using api.Models;
 
-namespace NextPlay.Data
+namespace api.Data
 {
     public class AppDbContext : DbContext
     {
