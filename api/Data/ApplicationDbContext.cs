@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using NextPlay.Models;
+using api.Models;
 
 namespace api.Data
 {
