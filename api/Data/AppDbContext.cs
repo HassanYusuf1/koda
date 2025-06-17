@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using NextPlay.Models;
+using api.Models;
 
 namespace NextPlay.Data
 {
