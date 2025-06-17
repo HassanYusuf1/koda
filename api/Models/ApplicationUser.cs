@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
-namespace NextPlay.Models
+namespace api.Models
 {
     public class ApplicationUser : IdentityUser
     {

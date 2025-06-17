@@ -5,7 +5,7 @@
       "publishDirectory": "out"
     },
     "deploy": {
-      "startCommand": "dotnet NextPlay.Api.dll",
+      "startCommand": "dotnet api.dll",
       "restartPolicyType": "ALWAYS"
     }
   }
