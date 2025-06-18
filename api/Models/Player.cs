@@ -12,5 +12,7 @@ namespace api.Models
         public ApplicationUser? User { get; set; }
 
         public ICollection<PlayerSession> PlayerSessions { get; set; } = new List<PlayerSession>();
+        
+
     }
 }
