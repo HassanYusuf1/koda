@@ -11,10 +11,10 @@ namespace api.Data
         {
         }
 
-        public DbSet<Player> Players => Set<Player>();
-      
-        public DbSet<Session> Sessions => Set<Session>();
-        public DbSet<Report> Reports => Set<Report>();
+        public DbSet<Player> Players { get; set; } = default!;
+        public DbSet<PlayerSession> PlayerSessions { get; set; } = default!;
+        public DbSet<Session> Sessions { get; set; } = default!;
+        public DbSet<Report> Reports { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

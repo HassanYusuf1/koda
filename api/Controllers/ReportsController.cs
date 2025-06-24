@@ -13,11 +13,11 @@ namespace api.Controllers
     public class ReportsController : ControllerBase
     {
        
-        private readonly AppDbContext _db;
+        private readonly AppDbContext  _db;
         private readonly UserManager<ApplicationUser> _userManager;
 
        
-        public ReportsController(AppDbContext db, UserManager<ApplicationUser> userManager)
+        public ReportsController(AppDbContext  db, UserManager<ApplicationUser> userManager)
         {
             _db = db;
             _userManager = userManager;

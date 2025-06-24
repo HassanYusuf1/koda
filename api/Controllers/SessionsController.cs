@@ -12,11 +12,11 @@ namespace api.Controllers
     [Authorize]
     public class SessionsController : ControllerBase
     {
-        private readonly AppDbContext _db;
+        private readonly AppDbContext  _db;
         private readonly UserManager<ApplicationUser> _userManager;
 
 
-        public SessionsController(AppDbContext db, UserManager<ApplicationUser> userManager)
+        public SessionsController(AppDbContext  db, UserManager<ApplicationUser> userManager)
         {
             _db = db;
             _userManager = userManager;

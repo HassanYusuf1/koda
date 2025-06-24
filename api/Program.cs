@@ -25,7 +25,8 @@ var jwtIssuer = jwtSettings["Issuer"];
 var jwtAudience = jwtSettings["Audience"];
 var jwtExpires = int.TryParse(jwtSettings["ExpiresInMinutes"], out var exp) ? exp : 60;
 
-builder.Services.AddSingleton(new JwtService(jwtKey, jwtIssuer!, jwtAudience!, jwtExpires));
+// JwtService pulls configuration from DI so register the type directly
+builder.Services.AddSingleton<JwtService>();
 
 
 builder.Services.AddAuthentication(options =>
