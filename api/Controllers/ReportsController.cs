@@ -12,9 +12,11 @@ namespace api.Controllers
     [Authorize]
     public class ReportsController : ControllerBase
     {
+       
         private readonly ApplicationDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
 
+       
         public ReportsController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
         {
             _db = db;
@@ -33,12 +35,45 @@ namespace api.Controllers
             return CreatedAtAction(nameof(GetReport), new { id = report.Id }, report);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetReports()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+            var roles = await _userManager.GetRolesAsync(user);
+
+            IQueryable<Report> query = _db.Reports
+                .Include(r => r.Player)
+                .Include(r => r.Session);
+
+            if (roles.Contains("Player"))
+            {
+                query = query.Where(r => r.PlayerId == user.Id);
+            }
+            else if (roles.Contains("Coach") && !roles.Contains("Admin"))
+            {
+                query = query.Where(r => r.Session!.CoachId == user.Id);
+            }
+
+            var reports = await query.ToListAsync();
+            return Ok(reports);
+        }
+
         [HttpGet("{id}")]
-        [Authorize(Policy = "CoachPolicy")]
         public async Task<IActionResult> GetReport(int id)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+            var roles = await _userManager.GetRolesAsync(user);
+
             var report = await _db.Reports.Include(r => r.Player).Include(r => r.Session).FirstOrDefaultAsync(r => r.Id == id);
             if (report == null) return NotFound();
+
+            if (roles.Contains("Player") && report.PlayerId != user.Id)
+                return Forbid();
+            if (roles.Contains("Coach") && !roles.Contains("Admin") && report.Session!.CoachId != user.Id)
+                return Forbid();
+
             return Ok(report);
         }
 
@@ -66,6 +101,52 @@ namespace api.Controllers
             }
             await _db.SaveChangesAsync();
             return Ok();
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateReport(int id, [FromBody] Report updated)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var report = await _db.Reports.FindAsync(id);
+            if (report == null) return NotFound();
+
+            if (roles.Contains("Player") && !roles.Contains("Admin") && report.PlayerId != user.Id)
+                return Forbid();
+            if (roles.Contains("Coach") && !roles.Contains("Admin") && report.Session!.CoachId != user.Id)
+                return Forbid();
+
+            report.SessionId = updated.SessionId;
+            report.EffortLevel = updated.EffortLevel;
+            report.Comment = updated.Comment;
+            report.InjuryStatus = updated.InjuryStatus;
+            report.VideoUrl = updated.VideoUrl;
+
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteReport(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var report = await _db.Reports.FindAsync(id);
+            if (report == null) return NotFound();
+
+            if (roles.Contains("Player") && !roles.Contains("Admin") && report.PlayerId != user.Id)
+                return Forbid();
+            if (roles.Contains("Coach") && !roles.Contains("Admin") &&
+                (await _db.Sessions.FindAsync(report.SessionId))?.CoachId != user.Id)
+                return Forbid();
+
+            _db.Reports.Remove(report);
+            await _db.SaveChangesAsync();
+            return NoContent();
         }
     }
 }

@@ -5,6 +5,7 @@ using api.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using api.DTOs;
 
 namespace api.Controllers
 {
@@ -84,6 +85,5 @@ namespace api.Controllers
         }
     }
 
-    public record RegisterDto(string Email, string Password, string FullName, string? Position, string? Team, DateTime? DateOfBirth, string Role);
-    public record LoginDto(string Email, string Password);
+
 }
