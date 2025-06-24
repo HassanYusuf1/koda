@@ -57,6 +57,8 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<SessionService>();
+builder.Services.AddScoped<PlayerService>();
+
 
 builder.Services.AddControllers();
 

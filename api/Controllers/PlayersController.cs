@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using api.Models;
+using api.Services;
 
 namespace api.Controllers
 {
@@ -10,17 +11,19 @@ namespace api.Controllers
     public class PlayersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly PlayerService _playerService;
 
-        public PlayersController(UserManager<ApplicationUser> userManager)
+        public PlayersController(UserManager<ApplicationUser> userManager, PlayerService playerService)
         {
             _userManager = userManager;
+            _playerService = playerService;
         }
 
         [HttpGet]
         [Authorize(Policy = "CoachPolicy")]
-        public IActionResult GetPlayers()
+        public async Task<IActionResult> GetPlayers()
         {
-            var players = _userManager.GetUsersInRoleAsync("Player").Result;
+            var players = await _playerService.GetPlayersAsync();
             return Ok(players.Select(u => new { u.Id, u.FullName, u.Email }));
         }
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using api.Data;
 using api.Models;
+using api.Services;
 
 namespace api.Controllers
 {
@@ -13,14 +14,16 @@ namespace api.Controllers
     public class ReportsController : ControllerBase
     {
        
-        private readonly AppDbContext  _db;
+        private readonly AppDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ReportService _reportService;
 
-       
-        public ReportsController(AppDbContext  db, UserManager<ApplicationUser> userManager)
+
+        public ReportsController(AppDbContext db, UserManager<ApplicationUser> userManager, ReportService reportService)
         {
             _db = db;
             _userManager = userManager;
+            _reportService = reportService;
         }
 
         [HttpPost]
@@ -29,10 +32,8 @@ namespace api.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            report.PlayerId = user.Id;
-            _db.Reports.Add(report);
-            await _db.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetReport), new { id = report.Id }, report);
+            var created = await _reportService.CreateReportAsync(report, user);
+            return CreatedAtAction(nameof(GetReport), new { id = created.Id }, created);
         }
 
         [HttpGet]
@@ -40,22 +41,7 @@ namespace api.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            var roles = await _userManager.GetRolesAsync(user);
-
-            IQueryable<Report> query = _db.Reports
-                .Include(r => r.Player)
-                .Include(r => r.Session);
-
-            if (roles.Contains("Player"))
-            {
-                query = query.Where(r => r.PlayerId == user.Id);
-            }
-            else if (roles.Contains("Coach") && !roles.Contains("Admin"))
-            {
-                query = query.Where(r => r.Session!.CoachId == user.Id);
-            }
-
-            var reports = await query.ToListAsync();
+            var reports = await _reportService.GetReportsAsync(user);
             return Ok(reports);
         }
 
@@ -64,15 +50,8 @@ namespace api.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            var roles = await _userManager.GetRolesAsync(user);
-
-            var report = await _db.Reports.Include(r => r.Player).Include(r => r.Session).FirstOrDefaultAsync(r => r.Id == id);
+            var report = await _reportService.GetReportAsync(id, user);
             if (report == null) return NotFound();
-
-            if (roles.Contains("Player") && report.PlayerId != user.Id)
-                return Forbid();
-            if (roles.Contains("Coach") && !roles.Contains("Admin") && report.Session!.CoachId != user.Id)
-                return Forbid();
 
             return Ok(report);
         }
@@ -108,23 +87,9 @@ namespace api.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            var roles = await _userManager.GetRolesAsync(user);
+            var success = await _reportService.UpdateReportAsync(id, updated, user);
+            if (!success) return NotFound();
 
-            var report = await _db.Reports.FindAsync(id);
-            if (report == null) return NotFound();
-
-            if (roles.Contains("Player") && !roles.Contains("Admin") && report.PlayerId != user.Id)
-                return Forbid();
-            if (roles.Contains("Coach") && !roles.Contains("Admin") && report.Session!.CoachId != user.Id)
-                return Forbid();
-
-            report.SessionId = updated.SessionId;
-            report.EffortLevel = updated.EffortLevel;
-            report.Comment = updated.Comment;
-            report.InjuryStatus = updated.InjuryStatus;
-            report.VideoUrl = updated.VideoUrl;
-
-            await _db.SaveChangesAsync();
             return NoContent();
         }
 
@@ -133,19 +98,9 @@ namespace api.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            var roles = await _userManager.GetRolesAsync(user);
+            var success = await _reportService.DeleteReportAsync(id, user);
+            if (!success) return NotFound();
 
-            var report = await _db.Reports.FindAsync(id);
-            if (report == null) return NotFound();
-
-            if (roles.Contains("Player") && !roles.Contains("Admin") && report.PlayerId != user.Id)
-                return Forbid();
-            if (roles.Contains("Coach") && !roles.Contains("Admin") &&
-                (await _db.Sessions.FindAsync(report.SessionId))?.CoachId != user.Id)
-                return Forbid();
-
-            _db.Reports.Remove(report);
-            await _db.SaveChangesAsync();
             return NoContent();
         }
     }

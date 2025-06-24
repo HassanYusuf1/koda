@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using api.Data;
 using api.Models;
+using api.Services;
 
 namespace api.Controllers
 {
@@ -12,36 +11,23 @@ namespace api.Controllers
     [Authorize]
     public class SessionsController : ControllerBase
     {
-        private readonly AppDbContext  _db;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SessionService _sessionService;
 
 
-        public SessionsController(AppDbContext  db, UserManager<ApplicationUser> userManager)
+        public SessionsController(UserManager<ApplicationUser> userManager, SessionService sessionService)
         {
-            _db = db;
             _userManager = userManager;
+            _sessionService = sessionService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetSessions()
         {
-           
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            var roles = await _userManager.GetRolesAsync(user);
 
-            IQueryable<Session> query = _db.Sessions.Include(s => s.Coach);
-
-            if (roles.Contains("Player"))
-            {
-                query = query.Where(s => _db.PlayerSessions.Any(ps => ps.SessionId == s.Id && ps.PlayerId == user.Id));
-            }
-            else if (roles.Contains("Coach") && !roles.Contains("Admin"))
-            {
-                query = query.Where(s => s.CoachId == user.Id);
-            }
-
-            var sessions = await query.ToListAsync();
+            var sessions = await _sessionService.GetSessionsAsync(user);
             return Ok(sessions);
         }
 
@@ -50,15 +36,9 @@ namespace api.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            var roles = await _userManager.GetRolesAsync(user);
 
-            var session = await _db.Sessions.Include(s => s.Coach).FirstOrDefaultAsync(s => s.Id == id);
+            var session = await _sessionService.GetSessionAsync(id, user);
             if (session == null) return NotFound();
-
-            if (roles.Contains("Player") && !_db.PlayerSessions.Any(ps => ps.SessionId == id && ps.PlayerId == user.Id))
-                return Forbid();
-            if (roles.Contains("Coach") && !roles.Contains("Admin") && session.CoachId != user.Id)
-                return Forbid();
 
             return Ok(session);
         }
@@ -69,20 +49,10 @@ namespace api.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            var roles = await _userManager.GetRolesAsync(user);
 
-            var session = await _db.Sessions.FindAsync(id);
-            if (session == null) return NotFound();
+            var success = await _sessionService.UpdateSessionAsync(id, updated, user);
+            if (!success) return NotFound();
 
-            if (roles.Contains("Coach") && !roles.Contains("Admin") && session.CoachId != user.Id)
-                return Forbid();
-
-            session.Title = updated.Title;
-            session.Date = updated.Date;
-            session.Location = updated.Location;
-            session.Intensity = updated.Intensity;
-
-            await _db.SaveChangesAsync();
             return NoContent();
         }
 
@@ -92,16 +62,10 @@ namespace api.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            var roles = await _userManager.GetRolesAsync(user);
 
-            var session = await _db.Sessions.FindAsync(id);
-            if (session == null) return NotFound();
+            var success = await _sessionService.DeleteSessionAsync(id, user);
+            if (!success) return NotFound();
 
-            if (roles.Contains("Coach") && !roles.Contains("Admin") && session.CoachId != user.Id)
-                return Forbid();
-
-            _db.Sessions.Remove(session);
-            await _db.SaveChangesAsync();
             return NoContent();
         }
 
@@ -109,9 +73,8 @@ namespace api.Controllers
         [Authorize(Policy = "CoachPolicy")]
         public async Task<IActionResult> CreateSession([FromBody] Session session)
         {
-            _db.Sessions.Add(session);
-            await _db.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetSessions), new { id = session.Id }, session);
+            var created = await _sessionService.CreateSessionAsync(session);
+            return CreatedAtAction(nameof(GetSessions), new { id = created.Id }, created);
         }
     }
 }
