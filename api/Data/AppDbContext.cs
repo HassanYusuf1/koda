@@ -4,15 +4,15 @@ using api.Models;
 
 namespace api.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
         }
 
         public DbSet<Player> Players => Set<Player>();
-        public DbSet<PlayerSession> PlayerSessions => Set<PlayerSession>();
+      
         public DbSet<Session> Sessions => Set<Session>();
         public DbSet<Report> Reports => Set<Report>();
 
