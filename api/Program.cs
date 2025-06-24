@@ -6,16 +6,17 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using api.Data;
 using api.Models;
+using api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
+     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -45,6 +46,10 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CoachPolicy", policy => policy.RequireRole("Coach", "Admin"));
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
 });
+
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<SessionService>();
 
 builder.Services.AddControllers();
 
