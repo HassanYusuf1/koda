@@ -38,4 +38,4 @@ namespace api.Helpers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
-}//
+}

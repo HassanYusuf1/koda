@@ -1,5 +1,5 @@
 namespace api.Services;
 
-public class JwtService
+public class SessionService
 {
 }
