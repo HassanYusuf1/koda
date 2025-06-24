@@ -1,25 +1,27 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hassan\\Desktop\\Prosjekt\\api\\api.csproj": {}
+    "C:\\Users\\abdik\\OneDrive\\Skrivebord\\koda\\api\\api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hassan\\Desktop\\Prosjekt\\api\\api.csproj": {
+    "C:\\Users\\abdik\\OneDrive\\Skrivebord\\koda\\api\\api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hassan\\Desktop\\Prosjekt\\api\\api.csproj",
+        "projectUniqueName": "C:\\Users\\abdik\\OneDrive\\Skrivebord\\koda\\api\\api.csproj",
         "projectName": "api",
-        "projectPath": "C:\\Users\\hassan\\Desktop\\Prosjekt\\api\\api.csproj",
-        "packagesPath": "C:\\Users\\hassan\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hassan\\Desktop\\Prosjekt\\api\\obj\\",
+        "projectPath": "C:\\Users\\abdik\\OneDrive\\Skrivebord\\koda\\api\\api.csproj",
+        "packagesPath": "C:\\Users\\abdik\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\abdik\\OneDrive\\Skrivebord\\koda\\api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\hassan\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\abdik\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -67,6 +69,12 @@
               "target": "Package",
               "version": "[8.0.8, )"
             },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.8, )"
+            },
             "Microsoft.IdentityModel.Tokens": {
               "target": "Package",
               "version": "[8.12.1, )"
@@ -103,7 +111,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.401/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
