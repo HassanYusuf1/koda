@@ -1,4 +1,4 @@
-name: .NET
+name: .NET CI
 
 on:
   push:
@@ -10,15 +10,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
-      - name: Restore
-        run: dotnet restore api/api.Api.csproj
-      - name: Build
-        run: dotnet build --no-restore api/api.Api.csproj
-      - name: Test
-        run: dotnet test --no-build --verbosity normal
-        continue-on-error: true
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+    - name: Restore
+      run: dotnet restore koda.sln
+    - name: Build
+      run: dotnet build koda.sln --no-restore --configuration Release
+    - name: Test
+      run: dotnet test koda.sln --no-build --configuration Release

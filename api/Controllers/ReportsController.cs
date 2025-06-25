@@ -31,29 +31,29 @@ namespace api.Controllers
         public async Task<IActionResult> CreateReport([FromBody] Report report)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            if (user == null) return Unauthorized(new ApiResponse<object>(false, "Unauthorized"));
             var created = await _reportService.CreateReportAsync(report, user);
-            return CreatedAtAction(nameof(GetReport), new { id = created.Id }, created);
+            return CreatedAtAction(nameof(GetReport), new { id = created.Id }, new ApiResponse<Report>(true, null, created));
         }
 
         [HttpGet]
         public async Task<IActionResult> GetReports()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            if (user == null) return Unauthorized(new ApiResponse<object>(false, "Unauthorized"));
             var reports = await _reportService.GetReportsAsync(user);
-            return Ok(reports);
+            return Ok(new ApiResponse<IEnumerable<Report>>(true, null, reports));
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetReport(int id)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            if (user == null) return Unauthorized(new ApiResponse<object>(false, "Unauthorized"));
             var report = await _reportService.GetReportAsync(id, user);
-            if (report == null) return NotFound();
+            if (report == null) return NotFound(new ApiResponse<object>(false, "Not found"));
 
-            return Ok(report);
+            return Ok(new ApiResponse<Report>(true, null, report));
         }
 
         [HttpPost("csv")]
@@ -61,7 +61,7 @@ namespace api.Controllers
         public async Task<IActionResult> UploadCsv(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("CSV file is required");
+                return BadRequest(new ApiResponse<object>(false, "CSV file is required"));
 
             using var reader = new StreamReader(file.OpenReadStream());
             string? line;
@@ -79,16 +79,16 @@ namespace api.Controllers
                 _db.Reports.Add(report);
             }
             await _db.SaveChangesAsync();
-            return Ok();
+            return Ok(new ApiResponse<object>(true, "CSV uploaded"));
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateReport(int id, [FromBody] Report updated)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            if (user == null) return Unauthorized(new ApiResponse<object>(false, "Unauthorized"));
             var success = await _reportService.UpdateReportAsync(id, updated, user);
-            if (!success) return NotFound();
+            if (!success) return NotFound(new ApiResponse<object>(false, "Not found"));
 
             return NoContent();
         }
@@ -97,9 +97,9 @@ namespace api.Controllers
         public async Task<IActionResult> DeleteReport(int id)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            if (user == null) return Unauthorized(new ApiResponse<object>(false, "Unauthorized"));
             var success = await _reportService.DeleteReportAsync(id, user);
-            if (!success) return NotFound();
+            if (!success) return NotFound(new ApiResponse<object>(false, "Not found"));
 
             return NoContent();
         }

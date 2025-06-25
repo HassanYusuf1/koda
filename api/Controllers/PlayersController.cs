@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using api.Models;
 using api.Services;
 
+
 namespace api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+     [Route("api/[controller]")]
     public class PlayersController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -24,7 +25,8 @@ namespace api.Controllers
         public async Task<IActionResult> GetPlayers()
         {
             var players = await _playerService.GetPlayersAsync();
-            return Ok(players.Select(u => new { u.Id, u.FullName, u.Email }));
+            var data = players.Select(u => new { u.Id, u.FullName, u.Email });
+            return Ok(new ApiResponse<object>(true, null, data));
         }
 
         [HttpGet("me")]
@@ -32,8 +34,8 @@ namespace api.Controllers
         public async Task<IActionResult> GetMe()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return NotFound();
-            return Ok(new { user.Id, user.FullName, user.Email, user.Position, user.Team });
+            if (user == null) return NotFound(new ApiResponse<object>(false, "User not found"));
+            return Ok(new ApiResponse<object>(true, null, new { user.Id, user.FullName, user.Email, user.Position, user.Team }));
         }
     }
 }

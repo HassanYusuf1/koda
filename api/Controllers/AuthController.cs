@@ -12,7 +12,7 @@ namespace api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
-    {
+      {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
 
@@ -37,10 +37,13 @@ namespace api.Controllers
 
             var result = await _userManager.CreateAsync(user, dto.Password);
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+                return BadRequest(new ApiResponse<object>(false, "Registration failed", result.Errors));
 
             await _userManager.AddToRoleAsync(user, dto.Role);
-            return Ok();
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+            return Ok(new ApiResponse<object>(true, "User registered", new { user.Id, EmailToken = token }));
         }
 
         [HttpPost("login")]
@@ -48,13 +51,13 @@ namespace api.Controllers
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
-                return Unauthorized();
+                return Unauthorized(new ApiResponse<object>(false, "Invalid credentials"));
 
             if (!await _userManager.CheckPasswordAsync(user, dto.Password))
-                return Unauthorized();
+                return Unauthorized(new ApiResponse<object>(false, "Invalid credentials"));
 
             var token = await GenerateJwtToken(user);
-            return Ok(new { token });
+            return Ok(new ApiResponse<string>(true, null, token));
         }
 
         private async Task<string> GenerateJwtToken(ApplicationUser user)
