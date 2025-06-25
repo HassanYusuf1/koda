@@ -16,37 +16,35 @@ public class SessionService
         _userManager = userManager;
     }
 
-    public async Task<IEnumerable<Session>> GetSessionsAsync(ApplicationUser user)
+    // ✅ Sentral metode for tilgangsstyring
+    private async Task<IQueryable<Session>> FilterSessionsByUser(ApplicationUser user)
     {
         var roles = await _userManager.GetRolesAsync(user);
-        IQueryable<Session> query = _db.Sessions.Include(s => s.Coach);
+        var query = _db.Sessions.Include(s => s.Coach);
 
         if (roles.Contains("Player"))
         {
-            query = query.Where(s => _db.PlayerSessions.Any(ps => ps.SessionId == s.Id && ps.PlayerId == user.Id));
+            query = query.Where(s =>
+                _db.PlayerSessions.Any(ps => ps.SessionId == s.Id && ps.PlayerId == user.Id));
         }
         else if (roles.Contains("Coach") && !roles.Contains("Admin"))
         {
-            query = query.Where(s => s.CoachId == user.Id);
+            query = query.Where(s => s.CoachId == user.Id && s.TeamId == user.TeamId);
         }
 
+        // Admin får alt (ingen filtrering)
+        return query;
+    }
+
+    public async Task<IEnumerable<Session>> GetSessionsAsync(ApplicationUser user)
+    {
+        var query = await FilterSessionsByUser(user);
         return await query.ToListAsync();
     }
 
     public async Task<Session?> GetSessionAsync(int id, ApplicationUser user)
     {
-        var roles = await _userManager.GetRolesAsync(user);
-        IQueryable<Session> query = _db.Sessions.Include(s => s.Coach);
-
-        if (roles.Contains("Player"))
-        {
-            query = query.Where(s => _db.PlayerSessions.Any(ps => ps.SessionId == s.Id && ps.PlayerId == user.Id));
-        }
-        else if (roles.Contains("Coach") && !roles.Contains("Admin"))
-        {
-            query = query.Where(s => s.CoachId == user.Id);
-        }
-
+        var query = await FilterSessionsByUser(user);
         return await query.FirstOrDefaultAsync(s => s.Id == id);
     }
 

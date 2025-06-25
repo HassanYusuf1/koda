@@ -12,9 +12,18 @@ public class PlayerService
         _userManager = userManager;
     }
 
-    public async Task<IEnumerable<ApplicationUser>> GetPlayersAsync()
+    public async Task<IEnumerable<ApplicationUser>> GetPlayersAsync(ApplicationUser requester)
     {
-        return await _userManager.GetUsersInRoleAsync("Player");
+        var allPlayers = await _userManager.GetUsersInRoleAsync("Player");
+        var requesterRoles = await _userManager.GetRolesAsync(requester);
+
+        // Hvis Coach (men ikke Admin), filtrer kun spillere på samme Team
+        if (requesterRoles.Contains("Coach") && !requesterRoles.Contains("Admin"))
+        {
+            return allPlayers.Where(p => p.TeamId == requester.TeamId).ToList();
+        }
+
+        return allPlayers;
     }
 
     public async Task<ApplicationUser?> GetPlayerAsync(string id)

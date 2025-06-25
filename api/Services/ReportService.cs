@@ -16,10 +16,12 @@ public class ReportService
         _userManager = userManager;
     }
 
-    public async Task<IEnumerable<Report>> GetReportsAsync(ApplicationUser user)
+    private async Task<IQueryable<Report>> FilterReportsByUser(ApplicationUser user)
     {
         var roles = await _userManager.GetRolesAsync(user);
-        IQueryable<Report> query = _db.Reports.Include(r => r.Player).Include(r => r.Session);
+        var query = _db.Reports
+            .Include(r => r.Player)
+            .Include(r => r.Session);
 
         if (roles.Contains("Player"))
         {
@@ -27,26 +29,21 @@ public class ReportService
         }
         else if (roles.Contains("Coach") && !roles.Contains("Admin"))
         {
-            query = query.Where(r => r.Session!.CoachId == user.Id);
+            query = query.Where(r => r.Session!.CoachId == user.Id && r.Session.TeamId == user.TeamId);
         }
 
+        return query;
+    }
+
+    public async Task<IEnumerable<Report>> GetReportsAsync(ApplicationUser user)
+    {
+        var query = await FilterReportsByUser(user);
         return await query.ToListAsync();
     }
 
     public async Task<Report?> GetReportAsync(int id, ApplicationUser user)
     {
-        var roles = await _userManager.GetRolesAsync(user);
-        IQueryable<Report> query = _db.Reports.Include(r => r.Player).Include(r => r.Session);
-
-        if (roles.Contains("Player"))
-        {
-            query = query.Where(r => r.PlayerId == user.Id);
-        }
-        else if (roles.Contains("Coach") && !roles.Contains("Admin"))
-        {
-            query = query.Where(r => r.Session!.CoachId == user.Id);
-        }
-
+        var query = await FilterReportsByUser(user);
         return await query.FirstOrDefaultAsync(r => r.Id == id);
     }
 

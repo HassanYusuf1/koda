@@ -2,17 +2,17 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using api.Models;
+using api.DTOs;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using api.DTOs;
 
 namespace api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
-      {
+    {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
 
@@ -32,7 +32,10 @@ namespace api.Controllers
                 FullName = dto.FullName,
                 Position = dto.Position,
                 Team = dto.Team,
-                DateOfBirth = dto.DateOfBirth
+                DateOfBirth = dto.DateOfBirth,
+                Role = dto.Role,
+                ClubId = dto.ClubId,
+                TeamId = dto.TeamId
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -60,11 +63,24 @@ namespace api.Controllers
             return Ok(new ApiResponse<string>(true, null, token));
         }
 
+        [HttpPost("confirm")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(dto.UserId);
+            if (user == null)
+                return NotFound(new ApiResponse<object>(false, "User not found"));
+
+            var result = await _userManager.ConfirmEmailAsync(user, dto.Token);
+            if (!result.Succeeded)
+                return BadRequest(new ApiResponse<object>(false, "Email confirmation failed", result.Errors));
+
+            return Ok(new ApiResponse<object>(true, "Email confirmed"));
+        }
+
         private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
             var jwtSettings = _config.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
-
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var roles = await _userManager.GetRolesAsync(user);
 
@@ -72,21 +88,20 @@ namespace api.Controllers
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-                new Claim(ClaimTypes.Name, user.UserName!),
+                new Claim(ClaimTypes.Name, user.UserName!)
             };
 
-            claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["ExpiresInMinutes"]!)),
-                signingCredentials: credentials);
+                signingCredentials: credentials
+            );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
-
-
 }
