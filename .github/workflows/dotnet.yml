@@ -1,0 +1,24 @@
+name: .NET CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+    - name: Restore
+      run: dotnet restore koda.sln
+    - name: Build
+      run: dotnet build koda.sln --no-restore --configuration Release
+    - name: Test
+      run: dotnet test koda.sln --no-build --configuration Release
+
