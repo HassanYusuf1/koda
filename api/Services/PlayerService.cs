@@ -12,9 +12,15 @@ public class PlayerService
         _userManager = userManager;
     }
 
-    public async Task<IEnumerable<ApplicationUser>> GetPlayersAsync()
+    public async Task<IEnumerable<ApplicationUser>> GetPlayersAsync(ApplicationUser requester)
     {
-        return await _userManager.GetUsersInRoleAsync("Player");
+        var players = await _userManager.GetUsersInRoleAsync("Player");
+        var roles = await _userManager.GetRolesAsync(requester);
+        if (roles.Contains("Coach") && !roles.Contains("Admin"))
+        {
+            players = players.Where(p => p.TeamId == requester.TeamId).ToList();
+        }
+        return players;
     }
 
     public async Task<ApplicationUser?> GetPlayerAsync(string id)

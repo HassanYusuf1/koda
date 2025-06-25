@@ -11,6 +11,9 @@ namespace api.Models
         public DateTime Date { get; set; }
         public string? Location { get; set; }
         public int Intensity { get; set; }
+
+        public int? TeamId { get; set; }
+        public Team? Team { get; set; }
         [Required]
         public string CoachId { get; set; } = string.Empty;
         [ForeignKey(nameof(CoachId))]

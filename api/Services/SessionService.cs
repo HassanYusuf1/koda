@@ -27,7 +27,7 @@ public class SessionService
         }
         else if (roles.Contains("Coach") && !roles.Contains("Admin"))
         {
-            query = query.Where(s => s.CoachId == user.Id);
+            query = query.Where(s => s.CoachId == user.Id && s.TeamId == user.TeamId);
         }
 
         return await query.ToListAsync();
@@ -44,7 +44,7 @@ public class SessionService
         }
         else if (roles.Contains("Coach") && !roles.Contains("Admin"))
         {
-            query = query.Where(s => s.CoachId == user.Id);
+            query = query.Where(s => s.CoachId == user.Id && s.TeamId == user.TeamId);
         }
 
         return await query.FirstOrDefaultAsync(s => s.Id == id);

@@ -32,7 +32,8 @@ namespace api.Controllers
                 FullName = dto.FullName,
                 Position = dto.Position,
                 Team = dto.Team,
-                DateOfBirth = dto.DateOfBirth
+                DateOfBirth = dto.DateOfBirth,
+                Role = dto.Role
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);

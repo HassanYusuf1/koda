@@ -24,7 +24,9 @@ namespace api.Controllers
         [Authorize(Policy = "CoachPolicy")]
         public async Task<IActionResult> GetPlayers()
         {
-            var players = await _playerService.GetPlayersAsync();
+            var requester = await _userManager.GetUserAsync(User);
+            if (requester == null) return Unauthorized(new ApiResponse<object>(false, "Unauthorized"));
+            var players = await _playerService.GetPlayersAsync(requester);
             var data = players.Select(u => new { u.Id, u.FullName, u.Email });
             return Ok(new ApiResponse<object>(true, null, data));
         }

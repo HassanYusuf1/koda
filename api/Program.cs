@@ -63,6 +63,9 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<PlayerService>();
+builder.Services.AddScoped<ClubService>();
+builder.Services.AddScoped<TeamService>();
+builder.Services.AddScoped<InviteService>();
 
 // Rate limiting
 builder.Services.AddRateLimiter(options =>
