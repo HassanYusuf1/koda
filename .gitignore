@@ -1,37 +1,28 @@
-# --- .NET ---
-bin/
-obj/
+# Byggemapper
+api/bin/
+api/obj/
+
+# Visual Studio og genererte filer
 *.user
 *.suo
 *.cache
 *.log
-*.vs/
-*.nupkg
-*.snupkg
-project.lock.json
+*.pdb
+
+# NuGet og MSBuild cache
 project.assets.json
 project.nuget.cache
 *.AssemblyReference.cache
-*.GeneratedMSBuildEditorConfig.editorconfig
 *.g.props
 *.g.targets
-*.props
-*.targets
-*.json
+*.GeneratedMSBuildEditorConfig.editorconfig
 
-# --- Node / Next.js ---
-node_modules/
-.next/
-out/
-.env
-.env.local
-npm-debug.log
-pnpm-debug.log
-yarn-debug.log
-yarn-error.log
+# --- Resharper / Rider ---
+.idea/
+*.sln.iml
 
-# --- VSCode ---
+# --- VS Code ---
 .vscode/
 
-# --- Mac OS ---
+# --- macOS ---
 .DS_Store
