@@ -16,11 +16,14 @@ public class SessionService
         _userManager = userManager;
     }
 
-    // ✅ Sentral metode for tilgangsstyring
+    // ✅ Filtrerer treningsøkter basert på brukerens rolle og tilhørighet
     private async Task<IQueryable<Session>> FilterSessionsByUser(ApplicationUser user)
     {
         var roles = await _userManager.GetRolesAsync(user);
-        var query = _db.Sessions.Include(s => s.Coach);
+
+        var query = _db.Sessions
+            .Include(s => s.Coach)
+            .AsQueryable(); // viktig for chaining
 
         if (roles.Contains("Player"))
         {
@@ -32,7 +35,7 @@ public class SessionService
             query = query.Where(s => s.CoachId == user.Id && s.TeamId == user.TeamId);
         }
 
-        // Admin får alt (ingen filtrering)
+        // Admin får alle økter
         return query;
     }
 

@@ -19,9 +19,11 @@ public class ReportService
     private async Task<IQueryable<Report>> FilterReportsByUser(ApplicationUser user)
     {
         var roles = await _userManager.GetRolesAsync(user);
+
         var query = _db.Reports
             .Include(r => r.Player)
-            .Include(r => r.Session);
+            .Include(r => r.Session)
+            .AsQueryable(); // 👈 viktig for chaining
 
         if (roles.Contains("Player"))
         {
