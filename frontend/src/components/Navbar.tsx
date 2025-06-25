@@ -1,46 +1,61 @@
 "use client";
-
 import Link from "next/link";
-import React from "react";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
-const Navbar: React.FC = () => {
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleMenu = () => setIsOpen(!isOpen);
+
+  const navLinks = [
+    { name: "Hjem", href: "/" },
+    { name: "Spillere", href: "/player" },
+    { name: "Økter", href: "/sessions" },
+    { name: "Rapporter", href: "/reports" },
+    { name: "Logg inn", href: "/login" },
+  ];
+
   return (
-    <nav className="bg-blue-900 text-white p-5 flex justify-between items-center shadow-md">
-      <div className="text-3xl font-extrabold tracking-wide">
-        <Link href="/">⚽ Fotballlaget</Link>
+    <nav className="w-full bg-white shadow-md px-4 py-3 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <Link href="/" className="text-xl font-bold text-black">
+          NextPlay
+        </Link>
+
+        <div className="md:hidden">
+          <button onClick={toggleMenu}>
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+
+        <ul className="hidden md:flex space-x-6 text-gray-700 font-medium">
+          {navLinks.map((link) => (
+            <li key={link.href}>
+              <Link href={link.href} className="hover:text-blue-600 transition">
+                {link.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul className="flex text-lg font-medium">
-        <li className="mr-10">
-          <Link href="/" className="hover:text-gray-300 transition-colors duration-200">
-            Hjem
-          </Link>
-        </li>
-        <li className="mr-10">
-          <Link href="/players" className="hover:text-gray-300 transition-colors duration-200">
-            Spillere
-          </Link>
-        </li>
-        <li className="mr-10">
-          <Link href="/sessions" className="hover:text-gray-300 transition-colors duration-200">
-            Økter
-          </Link>
-        </li>
-        <li className="mr-10">
-          <Link href="/reports" className="hover:text-gray-300 transition-colors duration-200">
-            Rapporter
-          </Link>
-        </li>
-        <li className="mr-10">
-          <Link href="/profile" className="hover:text-gray-300 transition-colors duration-200">
-            Min Profil
-          </Link>
-        </li>
-        <li>
-          <Link href="/login" className="hover:text-gray-300 transition-colors duration-200">
-            Logg Inn
-          </Link>
-        </li>
-      </ul>
+
+      {/* Mobilmeny */}
+      {isOpen && (
+        <ul className="md:hidden mt-2 space-y-3 px-2 text-gray-700 font-medium">
+          {navLinks.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                onClick={() => setIsOpen(false)}
+                className="block py-2 px-3 rounded hover:bg-gray-100 transition"
+              >
+                {link.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </nav>
   );
 };
