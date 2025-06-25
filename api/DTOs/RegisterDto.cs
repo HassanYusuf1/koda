@@ -15,5 +15,8 @@ namespace api.DTOs
         public DateTime? DateOfBirth { get; set; }
         [Required]
         public string Role { get; set; } = string.Empty;
+
+        public int? ClubId { get; set; }
+        public int? TeamId { get; set; }
     }
 }
