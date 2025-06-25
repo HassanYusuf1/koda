@@ -26,3 +26,19 @@ project.nuget.cache
 
 # --- macOS ---
 .DS_Store
+
+# --- Next.js / React / pnpm ---
+frontend/node_modules/
+frontend/.next/
+frontend/.turbo/
+frontend/.pnpm/
+frontend/dist/
+frontend/out/
+frontend/.env*
+frontend/pnpm-debug.log
+frontend/pnpm-lock.yaml # Valgfritt: Hvis du ikke ønsker å ha med låsfilen i Git
+
+# --- Generelt ---
+*.log
+*.tsbuildinfo
+
