@@ -15,7 +15,7 @@ html, body {
 /* Base styles */
 .login-container {
   min-height: 100vh;
-  height: 100vh;
+height: auto;
   width: 100vw;
   display: flex;
   align-items: center;
@@ -30,7 +30,7 @@ html, body {
 /* Single centered login panel */
 .login-form-section {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   display: flex;
   align-items: center;
   justify-content: center;
