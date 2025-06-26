@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using api.Models;
 using api.DTOs;
+using api.Models.Email;
+using api.Services.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Net;
 
 namespace api.Controllers
 {
@@ -15,11 +18,16 @@ namespace api.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
+        private readonly IEmailService _emailService;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config)
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            IConfiguration config,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _config = config;
+            _emailService = emailService;
         }
 
         [HttpPost("register")]
@@ -45,6 +53,15 @@ namespace api.Controllers
             await _userManager.AddToRoleAsync(user, dto.Role);
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var confirmationUrl = $"https://nextplay.app/confirm?userId={user.Id}&token={WebUtility.UrlEncode(token)}";
+            var body = $"Hello {dto.Email},<br/>Please confirm your email by clicking <a href='{confirmationUrl}'>this link</a>.";
+
+            await _emailService.SendAsync(new EmailMessage
+            {
+                To = dto.Email,
+                Subject = "Confirm your email",
+                Body = body
+            });
 
             return Ok(new ApiResponse<object>(true, "User registered", new { user.Id, EmailToken = token }));
         }
@@ -58,6 +75,9 @@ namespace api.Controllers
 
             if (!await _userManager.CheckPasswordAsync(user, dto.Password))
                 return Unauthorized(new ApiResponse<object>(false, "Invalid credentials"));
+
+            if (!user.EmailConfirmed)
+                return Unauthorized(new ApiResponse<object>(false, "Email not confirmed"));
 
             var token = await GenerateJwtToken(user);
             return Ok(new ApiResponse<string>(true, null, token));
@@ -90,7 +110,6 @@ namespace api.Controllers
                 new Claim(JwtRegisteredClaimNames.Email, user.Email!),
                 new Claim(ClaimTypes.Name, user.UserName!)
             };
-
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var token = new JwtSecurityToken(
