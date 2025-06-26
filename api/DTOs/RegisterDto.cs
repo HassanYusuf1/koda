@@ -10,7 +10,7 @@ namespace api.DTOs
 
         [Required(ErrorMessage = "Password is required")]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
-        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]", 
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]",
             ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")]
         public string Password { get; set; } = string.Empty;
 
@@ -27,10 +27,15 @@ namespace api.DTOs
         public DateTime? DateOfBirth { get; set; }
 
         [Required(ErrorMessage = "Role is required")]
-        [RegularExpression("^(Player|Coach|Admin)$", ErrorMessage = "Role must be Player, Coach, or Admin")]
+        [RegularExpression("^(PlatformAdmin|ClubAdmin|Coach|Player)$", ErrorMessage = "Role must be one of: PlatformAdmin, ClubAdmin, Coach, Player")]
         public string Role { get; set; } = string.Empty;
 
+        public string? ClubName { get; set; }
+
         public int? ClubId { get; set; }
+
         public int? TeamId { get; set; }
+
+        public string? InvitationCode { get; set; }
     }
 }

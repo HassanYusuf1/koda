@@ -15,12 +15,12 @@ using api.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Database
+// --- Database ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Identity with enhanced security
+// --- Identity ---
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -31,14 +31,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequiredUniqueChars = 1;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
-    options.Lockout.AllowedForNewUsers = true;
     options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// JWT Configuration
+// --- JWT Configuration ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSettings["Key"];
 if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
@@ -70,14 +69,16 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Authorization policies
+// --- Authorization policies ---
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("CoachPolicy", policy => policy.RequireRole("Coach", "Admin"));
-    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("CoachPolicy", policy =>
+        policy.RequireRole("Coach", "ClubAdmin", "PlatformAdmin"));
+    options.AddPolicy("AdminPolicy", policy =>
+        policy.RequireRole("ClubAdmin", "PlatformAdmin"));
 });
 
-// App Services
+// --- App Services ---
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<SessionService>();
@@ -85,10 +86,9 @@ builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<ClubService>();
 builder.Services.AddScoped<TeamService>();
 builder.Services.AddScoped<InviteService>();
-
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-// Rate Limiting
+// --- Rate Limiting ---
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
@@ -116,7 +116,7 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
-// CORS
+// --- CORS ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DefaultPolicy", policy =>
@@ -128,7 +128,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Controllers
+// --- Controllers ---
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -142,7 +142,7 @@ builder.Services.AddControllers()
         };
     });
 
-// Swagger
+// --- Swagger ---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

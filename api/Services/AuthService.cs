@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using api.Models;
 using api.DTOs;
+using api.Models.Email;
+using System.Net;
+using api.Data;
+using api.Services.Interfaces;
 
 namespace api.Services
 {
@@ -18,33 +23,75 @@ namespace api.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JwtService _jwtService;
         private readonly ILogger<AuthService> _logger;
+        private readonly AppDbContext _db;
+        private readonly InviteService _inviteService;
+        private readonly IEmailService _emailService;
 
         public AuthService(
-            UserManager<ApplicationUser> userManager, 
+            UserManager<ApplicationUser> userManager,
             JwtService jwtService,
-            ILogger<AuthService> logger)
+            ILogger<AuthService> logger,
+            AppDbContext db,
+            InviteService inviteService,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _jwtService = jwtService;
             _logger = logger;
+            _db = db;
+            _inviteService = inviteService;
+            _emailService = emailService;
         }
 
         public async Task<AuthResult> RegisterAsync(RegisterDto dto)
         {
             try
             {
+                var assignedRole = dto.Role;
+
+                if (!_userManager.Users.Any())
+                {
+                    assignedRole = "PlatformAdmin";
+                    _logger.LogInformation("First user registered. Assigning PlatformAdmin role to {Email}", dto.Email);
+                }
+
+                Invite? invite = null;
+
+                if (assignedRole == "ClubAdmin")
+                {
+                    if (string.IsNullOrWhiteSpace(dto.ClubName))
+                    {
+                        return new AuthResult { Success = false, Message = "Club name is required" };
+                    }
+
+                    var exists = await _db.Clubs.AnyAsync(c => c.Name == dto.ClubName);
+                    if (exists)
+                    {
+                        return new AuthResult { Success = false, Message = "Klubben finnes allerede" };
+                    }
+                }
+                else if (assignedRole == "Coach" || assignedRole == "Player")
+                {
+                    invite = await _inviteService.ValidateInviteAsync(dto.Email, dto.InvitationCode);
+                    if (invite == null)
+                    {
+                        _logger.LogWarning("Invalid invite for {Email}", dto.Email);
+                        return new AuthResult { Success = false, Message = "Ugyldig invitasjon" };
+                    }
+
+                    assignedRole = invite.Role;
+                }
+
                 var user = new ApplicationUser
                 {
                     UserName = dto.Email,
                     Email = dto.Email,
                     FullName = dto.FullName,
-                    Position = dto.Position,
-                    Team = dto.Team,
                     DateOfBirth = dto.DateOfBirth?.ToUniversalTime(),
-                    Role = dto.Role,
-                    ClubId = dto.ClubId,
-                    TeamId = dto.TeamId,
-                    EmailConfirmed = false // Require email confirmation
+                    Role = assignedRole,
+                    ClubId = invite?.ClubId,
+                    TeamId = invite?.TeamId,
+                    EmailConfirmed = false
                 };
 
                 var result = await _userManager.CreateAsync(user, dto.Password);
@@ -58,11 +105,9 @@ namespace api.Services
                     };
                 }
 
-                // Add user to role
-                var roleResult = await _userManager.AddToRoleAsync(user, dto.Role);
+                var roleResult = await _userManager.AddToRoleAsync(user, assignedRole);
                 if (!roleResult.Succeeded)
                 {
-                    // Cleanup: delete the user if role assignment fails
                     await _userManager.DeleteAsync(user);
                     return new AuthResult
                     {
@@ -72,11 +117,37 @@ namespace api.Services
                     };
                 }
 
+                if (assignedRole == "ClubAdmin")
+                {
+                    var club = new Club { Name = dto.ClubName!, CreatedByAdminId = user.Id };
+                    _db.Clubs.Add(club);
+                    await _db.SaveChangesAsync();
+
+                    user.ClubId = club.Id;
+                    await _userManager.UpdateAsync(user);
+                }
+
+                if (invite != null)
+                {
+                    await _inviteService.AcceptInviteAsync(invite);
+                }
+
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var confirmationUrl = $"https://nextplay.app/confirm?userId={user.Id}&token={WebUtility.UrlEncode(token)}";
+                var body = $"Hello {dto.Email},<br/>Please confirm your email by clicking <a href='{confirmationUrl}'>this link</a>.<br/>Your confirmation token is: {WebUtility.HtmlEncode(token)}";
+                await _emailService.SendAsync(new EmailMessage
+                {
+                    To = dto.Email,
+                    Subject = "Confirm your email",
+                    Body = body
+                });
+
                 return new AuthResult
                 {
                     Success = true,
                     Message = "User registered successfully",
-                    UserId = user.Id
+                    UserId = user.Id,
+                    Token = token
                 };
             }
             catch (Exception ex)
@@ -89,7 +160,6 @@ namespace api.Services
                 };
             }
         }
-
         public async Task<AuthResult> LoginAsync(string email, string password)
         {
             try

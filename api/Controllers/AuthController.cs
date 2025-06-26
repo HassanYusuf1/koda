@@ -1,5 +1,3 @@
-// ✅ Dette er en renset og fikset versjon av AuthController.cs, med alle merge-konflikter fjernet.
-
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -12,6 +10,7 @@ using api.Models;
 using api.DTOs;
 using api.Services.Interfaces;
 using api.Models.Email;
+using api.Services;
 
 namespace api.Controllers
 {
@@ -23,47 +22,30 @@ namespace api.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
         private readonly IEmailService _emailService;
+        private readonly AuthService _authService;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config, IEmailService emailService)
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            IConfiguration config,
+            IEmailService emailService,
+            AuthService authService)
         {
             _userManager = userManager;
             _config = config;
             _emailService = emailService;
+            _authService = authService;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var user = new ApplicationUser
+            var result = await _authService.RegisterAsync(dto);
+            if (!result.Success)
             {
-                UserName = dto.Email,
-                Email = dto.Email,
-                FullName = dto.FullName,
-                Position = dto.Position,
-                Team = dto.Team,
-                DateOfBirth = dto.DateOfBirth,
-                Role = dto.Role,
-                ClubId = dto.ClubId,
-                TeamId = dto.TeamId
-            };
+                return BadRequest(new ApiResponse<object>(false, result.Message, result.Errors));
+            }
 
-            var result = await _userManager.CreateAsync(user, dto.Password);
-            if (!result.Succeeded)
-                return BadRequest(new ApiResponse<object>(false, "Registration failed", result.Errors));
-
-            await _userManager.AddToRoleAsync(user, dto.Role);
-
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var confirmationUrl = $"https://nextplay.app/confirm?userId={user.Id}&token={WebUtility.UrlEncode(token)}";
-            var body = $"Hello {dto.Email},<br/>Please confirm your email by clicking <a href='{confirmationUrl}'>this link</a>.<br/>Your confirmation token is: {WebUtility.HtmlEncode(token)}";
-            await _emailService.SendAsync(new EmailMessage
-            {
-                To = dto.Email,
-                Subject = "Confirm your email",
-                Body = body
-            });
-
-            return Ok(new ApiResponse<object>(true, "User registered", new { user.Id, EmailToken = token }));
+            return Ok(new ApiResponse<object>(true, result.Message, new { result.UserId, EmailToken = result.Token }));
         }
 
         [HttpPost("login")]

@@ -4,7 +4,14 @@ namespace api.Data
 {
     public static class RoleSeeder
     {
-        private static readonly string[] Roles = new[] { "Player", "Coach", "Admin" };
+        // Riktig liste med alle gyldige roller i NextPlay
+        private static readonly string[] Roles = new[]
+        {
+            "PlatformAdmin",
+            "ClubAdmin",
+            "Coach",
+            "Player"
+        };
 
         public static async Task SeedAsync(IServiceProvider serviceProvider)
         {

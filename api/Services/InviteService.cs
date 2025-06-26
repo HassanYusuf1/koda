@@ -25,6 +25,17 @@ public class InviteService
         return await _db.Invites.FirstOrDefaultAsync(i => i.Token == token && !i.IsAccepted);
     }
 
+    public async Task<Invite?> ValidateInviteAsync(string email, string? token)
+    {
+        var query = _db.Invites.Where(i => i.Email == email && !i.IsAccepted);
+        if (!string.IsNullOrEmpty(token))
+        {
+            query = query.Where(i => i.Token == token);
+        }
+
+        return await query.FirstOrDefaultAsync();
+    }
+
     public async Task AcceptInviteAsync(Invite invite)
     {
         invite.IsAccepted = true;
