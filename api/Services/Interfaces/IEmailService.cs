@@ -1,8 +1,10 @@
-namespace api.Services.Interfaces;
-
-using api.Models.Email;
-
-public interface IEmailService
+namespace api.Services.Interfaces
 {
-    Task SendAsync(EmailMessage message);
+    using api.Models.Email;
+    using System.Threading.Tasks;
+
+    public interface IEmailService
+    {
+        Task SendAsync(EmailMessage message);
+    }
 }
