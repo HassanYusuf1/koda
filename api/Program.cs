@@ -10,6 +10,8 @@ using System.Threading.RateLimiting;
 using api.Data;
 using api.Models;
 using api.Services;
+using api.Services.Email;
+using api.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,34 +23,28 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Identity with enhanced security
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // Password requirements
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequiredLength = 8;
     options.Password.RequiredUniqueChars = 1;
-
-    // Lockout settings
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
-
-    // User settings
     options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// JWT Configuration with validation
+// JWT Configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSettings["Key"];
 if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
 {
     throw new InvalidOperationException("JWT Key must be at least 32 characters long");
 }
-
 var jwtIssuer = jwtSettings["Issuer"];
 var jwtAudience = jwtSettings["Audience"];
 
@@ -81,7 +77,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
 });
 
-// Services
+// App Services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<SessionService>();
@@ -90,13 +86,11 @@ builder.Services.AddScoped<ClubService>();
 builder.Services.AddScoped<TeamService>();
 builder.Services.AddScoped<InviteService>();
 
-// Add Email Service
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-// Rate limiting with multiple policies
+// Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
-    // General API rate limiting
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -108,7 +102,6 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 
-    // Strict rate limiting for auth endpoints
     options.AddPolicy("AuthPolicy", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -123,19 +116,19 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
-// CORS configuration
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DefaultPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000") // Add your frontend URL
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
     });
 });
 
-// Controller + validation
+// Controllers
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -149,7 +142,7 @@ builder.Services.AddControllers()
         };
     });
 
-// Swagger with JWT support
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -181,7 +174,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Seed roles
 await RoleSeeder.SeedAsync(app.Services);
 
 if (app.Environment.IsDevelopment())
