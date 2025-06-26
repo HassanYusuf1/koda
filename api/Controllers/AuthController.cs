@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using api.Models;
 using api.DTOs;
+using api.Models.Email;
+using api.Services.Interfaces;
+using System.Net;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -15,11 +18,13 @@ namespace api.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
+        private readonly IEmailService _emailService;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config)
+        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config, IEmailService emailService)
         {
             _userManager = userManager;
             _config = config;
+            _emailService = emailService;
         }
 
         [HttpPost("register")]
@@ -45,6 +50,15 @@ namespace api.Controllers
             await _userManager.AddToRoleAsync(user, dto.Role);
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var confirmationUrl = $"https://nextplay.app/confirm?userId={user.Id}&token={WebUtility.UrlEncode(token)}";
+            var body = $"Hello {dto.Email},<br/>Please confirm your email by clicking <a href='{confirmationUrl}'>this link</a>.<br/>" +
+                       $"Your confirmation token is: {WebUtility.HtmlEncode(token)}";
+            await _emailService.SendAsync(new EmailMessage
+            {
+                To = dto.Email,
+                Subject = "Confirm your email",
+                Body = body
+            });
 
             return Ok(new ApiResponse<object>(true, "User registered", new { user.Id, EmailToken = token }));
         }

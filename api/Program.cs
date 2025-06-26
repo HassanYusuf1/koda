@@ -10,6 +10,8 @@ using System.Threading.RateLimiting;
 using api.Data;
 using api.Models;
 using api.Services;
+using api.Services.Email;
+using api.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +68,15 @@ builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<ClubService>();
 builder.Services.AddScoped<TeamService>();
 builder.Services.AddScoped<InviteService>();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<IEmailService, MockEmailService>();
+}
+else
+{
+    builder.Services.AddScoped<IEmailService, EmailService>();
+}
 
 
 // Rate limiting
