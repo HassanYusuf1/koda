@@ -90,6 +90,9 @@ builder.Services.AddScoped<ClubService>();
 builder.Services.AddScoped<TeamService>();
 builder.Services.AddScoped<InviteService>();
 
+// Add Email Service
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 // Rate limiting with multiple policies
 builder.Services.AddRateLimiter(options =>
 {

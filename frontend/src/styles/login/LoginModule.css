@@ -65,10 +65,16 @@ html, body {
   box-sizing: border-box;
 }
 
+/* Extended form wrapper for registration */
+.register-form {
+  max-width: 480px;
+}
+
 /* Header section */
 .login-header {
   text-align: center;
   margin-bottom: 2.5rem;
+  position: relative;
 }
 
 .login-logo {
@@ -83,6 +89,11 @@ html, body {
   box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
 }
 
+.success-logo {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
 .login-title {
   font-size: 2.5rem;
   font-weight: 700;
@@ -95,6 +106,31 @@ html, body {
   color: #94a3b8;
   font-size: 1rem;
   font-weight: 400;
+}
+
+/* Back button */
+.back-button {
+  position: absolute;
+  top: -1rem;
+  left: 0;
+  background: rgba(71, 85, 105, 0.3);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.back-button:hover {
+  background: rgba(71, 85, 105, 0.5);
+  color: white;
+  transform: translateX(-2px);
 }
 
 /* Error message */
@@ -182,6 +218,16 @@ html, body {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
+/* Select field specific styles */
+.select-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
 /* Password field specific */
 .password-wrapper {
   position: relative;
@@ -254,6 +300,30 @@ html, body {
   opacity: 0.7;
 }
 
+/* Register button */
+.register-button {
+  width: 100%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.register-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
 /* Loading spinner */
 .loading-spinner {
   width: 20px;
@@ -280,15 +350,82 @@ html, body {
   font-size: 0.875rem;
   text-decoration: none;
   transition: color 0.2s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .forgot-password-link:hover {
   color: #93c5fd;
 }
 
-/* Remove all background section styles and mobile background */
+/* Success content styles */
+.success-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
 
-/* Show mobile background on small screens */
+.success-instructions {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.success-instructions h3 {
+  color: #10b981;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.success-instructions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.success-instructions li {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.success-instructions li:before {
+  content: '✓';
+  color: #10b981;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.resend-info {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.resend-link {
+  color: #60a5fa;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
+  padding: 0;
+  margin-left: 0.25rem;
+}
+
+.resend-link:hover {
+  color: #93c5fd;
+}
+
+/* Mobile responsiveness */
 @media (max-width: 768px) {
   .login-container {
     padding: 1rem;
@@ -299,6 +436,10 @@ html, body {
     border-radius: 16px;
   }
   
+  .register-form {
+    max-width: 100%;
+  }
+  
   .login-title {
     font-size: 2rem;
   }
@@ -306,6 +447,16 @@ html, body {
   .login-logo {
     width: 60px;
     height: 60px;
+  }
+
+  .back-button {
+    position: static;
+    margin-bottom: 1rem;
+    align-self: flex-start;
+  }
+
+  .login-header {
+    margin-bottom: 2rem;
   }
 }
 
@@ -339,7 +490,13 @@ html, body {
     font-size: 16px; /* Prevents zoom on iOS */
   }
   
-  .submit-button {
+  .submit-button,
+  .register-button {
     padding: 14px;
+  }
+
+  .back-button {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
   }
 }
