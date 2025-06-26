@@ -1,107 +1,125 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.RateLimiting;
 using api.Models;
 using api.DTOs;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using api.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableRateLimiting("AuthPolicy")]
     public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IConfiguration _config;
+        private readonly AuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config)
+        public AuthController(
+            UserManager<ApplicationUser> userManager, 
+            AuthService authService,
+            ILogger<AuthController> logger)
         {
             _userManager = userManager;
-            _config = config;
+            _authService = authService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            var user = new ApplicationUser
+            try
             {
-                UserName = dto.Email,
-                Email = dto.Email,
-                FullName = dto.FullName,
-                Position = dto.Position,
-                Team = dto.Team,
-                DateOfBirth = dto.DateOfBirth,
-                Role = dto.Role,
-                ClubId = dto.ClubId,
-                TeamId = dto.TeamId
-            };
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage);
+                    return BadRequest(new ApiResponse<object>(false, "Validation failed", errors));
+                }
 
-            var result = await _userManager.CreateAsync(user, dto.Password);
-            if (!result.Succeeded)
-                return BadRequest(new ApiResponse<object>(false, "Registration failed", result.Errors));
+                // Check if user already exists
+                var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+                if (existingUser != null)
+                {
+                    return Conflict(new ApiResponse<object>(false, "User with this email already exists"));
+                }
 
-            await _userManager.AddToRoleAsync(user, dto.Role);
+                var result = await _authService.RegisterAsync(dto);
+                if (!result.Success)
+                {
+                    return BadRequest(new ApiResponse<object>(false, result.Message, result.Errors));
+                }
 
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            return Ok(new ApiResponse<object>(true, "User registered", new { user.Id, EmailToken = token }));
+                _logger.LogInformation("User registered successfully: {Email}", dto.Email);
+                return Ok(new ApiResponse<object>(true, "User registered successfully", new { result.UserId }));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during user registration for email: {Email}", dto.Email);
+                return StatusCode(500, new ApiResponse<object>(false, "An error occurred during registration"));
+            }
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user == null)
-                return Unauthorized(new ApiResponse<object>(false, "Invalid credentials"));
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new ApiResponse<object>(false, "Invalid input"));
+                }
 
-            if (!await _userManager.CheckPasswordAsync(user, dto.Password))
-                return Unauthorized(new ApiResponse<object>(false, "Invalid credentials"));
+                var result = await _authService.LoginAsync(dto.Email, dto.Password);
+                if (!result.Success)
+                {
+                    _logger.LogWarning("Failed login attempt for email: {Email}", dto.Email);
+                    return Unauthorized(new ApiResponse<object>(false, "Invalid email or password"));
+                }
 
-            var token = await GenerateJwtToken(user);
-            return Ok(new ApiResponse<string>(true, null, token));
+                _logger.LogInformation("User logged in successfully: {Email}", dto.Email);
+                return Ok(new ApiResponse<string>(true, "Login successful", result.Token));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during login for email: {Email}", dto.Email);
+                return StatusCode(500, new ApiResponse<object>(false, "An error occurred during login"));
+            }
         }
 
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
         {
-            var user = await _userManager.FindByIdAsync(dto.UserId);
-            if (user == null)
-                return NotFound(new ApiResponse<object>(false, "User not found"));
-
-            var result = await _userManager.ConfirmEmailAsync(user, dto.Token);
-            if (!result.Succeeded)
-                return BadRequest(new ApiResponse<object>(false, "Email confirmation failed", result.Errors));
-
-            return Ok(new ApiResponse<object>(true, "Email confirmed"));
-        }
-
-        private async Task<string> GenerateJwtToken(ApplicationUser user)
-        {
-            var jwtSettings = _config.GetSection("Jwt");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var roles = await _userManager.GetRolesAsync(user);
-
-            var claims = new List<Claim>
+            try
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-                new Claim(ClaimTypes.Name, user.UserName!)
-            };
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new ApiResponse<object>(false, "Invalid input"));
+                }
 
-            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+                var user = await _userManager.FindByIdAsync(dto.UserId);
+                if (user == null)
+                {
+                    return NotFound(new ApiResponse<object>(false, "User not found"));
+                }
 
-            var token = new JwtSecurityToken(
-                issuer: jwtSettings["Issuer"],
-                audience: jwtSettings["Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["ExpiresInMinutes"]!)),
-                signingCredentials: credentials
-            );
+                var result = await _userManager.ConfirmEmailAsync(user, dto.Token);
+                if (!result.Succeeded)
+                {
+                    return BadRequest(new ApiResponse<object>(false, "Email confirmation failed"));
+                }
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+                _logger.LogInformation("Email confirmed for user: {UserId}", dto.UserId);
+                return Ok(new ApiResponse<object>(true, "Email confirmed successfully"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during email confirmation for user: {UserId}", dto.UserId);
+                return StatusCode(500, new ApiResponse<object>(false, "An error occurred during email confirmation"));
+            }
         }
     }
 }
