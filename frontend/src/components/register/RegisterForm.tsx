@@ -3,8 +3,6 @@
 import { useState } from "react";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
-import styles from "@/styles/register/registerModule.module.css";
-
 
 interface RegisterData {
   fullName: string;
@@ -28,9 +26,7 @@ export default function RegisterForm() {
   const [serverError, setServerError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -93,8 +89,8 @@ export default function RegisterForm() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-800 to-slate-950 p-4">
-      <div className="w-full max-w-md space-y-6 rounded-xl border border-slate-700 bg-slate-900/70 p-6 backdrop-blur">
-        <h1 className="text-center text-2xl font-bold">Registrer deg</h1>
+      <div className="w-full max-w-md space-y-6 rounded-xl border border-slate-700 bg-slate-900/70 p-6 backdrop-blur-md shadow-xl">
+        <h1 className="text-center text-3xl font-bold text-white">Registrer deg</h1>
         {serverError && (
           <p className="rounded-md bg-red-500/20 p-2 text-center text-sm text-red-300">
             {serverError}
@@ -107,7 +103,7 @@ export default function RegisterForm() {
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="fullName" className="mb-1 block text-sm font-medium">
+            <label htmlFor="fullName" className="block text-sm font-medium text-white mb-1">
               Fullt navn
             </label>
             <input
@@ -116,15 +112,13 @@ export default function RegisterForm() {
               type="text"
               value={formData.fullName}
               onChange={handleChange}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
               placeholder="Ditt fulle navn"
+              className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.fullName && (
-              <p className="mt-1 text-sm text-red-400">{errors.fullName}</p>
-            )}
+            {errors.fullName && <p className="mt-1 text-sm text-red-400">{errors.fullName}</p>}
           </div>
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">
+            <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
               E-post
             </label>
             <input
@@ -133,15 +127,13 @@ export default function RegisterForm() {
               type="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
               placeholder="din@epost.no"
+              className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-400">{errors.email}</p>
-            )}
+            {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email}</p>}
           </div>
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium">
+            <label htmlFor="password" className="block text-sm font-medium text-white mb-1">
               Passord
             </label>
             <div className="relative">
@@ -151,8 +143,8 @@ export default function RegisterForm() {
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 pr-10 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
                 placeholder="Minst 6 tegn"
+                className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 pr-10 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="button"
@@ -162,12 +154,10 @@ export default function RegisterForm() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-400">{errors.password}</p>
-            )}
+            {errors.password && <p className="mt-1 text-sm text-red-400">{errors.password}</p>}
           </div>
           <div>
-            <label htmlFor="clubName" className="mb-1 block text-sm font-medium">
+            <label htmlFor="clubName" className="block text-sm font-medium text-white mb-1">
               Klubbenavn (valgfritt)
             </label>
             <input
@@ -176,11 +166,11 @@ export default function RegisterForm() {
               type="text"
               value={formData.clubName}
               onChange={handleChange}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label htmlFor="invitationCode" className="mb-1 block text-sm font-medium">
+            <label htmlFor="invitationCode" className="block text-sm font-medium text-white mb-1">
               Invitasjonskode (valgfritt)
             </label>
             <input
@@ -189,13 +179,13 @@ export default function RegisterForm() {
               type="text"
               value={formData.invitationCode}
               onChange={handleChange}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-600"
+            className="w-full rounded-md bg-blue-600 hover:bg-blue-700 text-white py-2 font-semibold disabled:opacity-50"
           >
             {loading ? "Registrerer..." : "Registrer"}
           </button>
