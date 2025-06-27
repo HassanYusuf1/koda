@@ -96,6 +96,20 @@ namespace api.Controllers
                 return BadRequest(new ApiResponse<object>(false, "Email confirmation failed", result.Errors));
 
             return Ok(new ApiResponse<object>(true, "Email confirmed successfully"));
+
+        }
+
+            [HttpGet("test-email")]
+        public async Task<IActionResult> TestEmail()
+        {
+            await _emailService.SendAsync(new EmailMessage
+            {
+                To = "hassansahal123@outlook.com",
+                Subject = "Test Email",
+                Body = "Dette er en test av e-posttjenesten."
+            });
+
+            return Ok(new ApiResponse<string>(true, "E-post sendt!"));
         }
     }
 }

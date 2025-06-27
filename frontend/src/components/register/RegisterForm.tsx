@@ -47,8 +47,8 @@ export default function RegisterForm() {
     }
     if (!formData.password.trim()) {
       newErrors.password = "Passord er påkrevd";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Passord må være minst 6 tegn";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Passord må være minst 8 tegn";
     }
     return newErrors;
   };
@@ -60,16 +60,25 @@ export default function RegisterForm() {
       setErrors(validation);
       return;
     }
+
     setLoading(true);
     setServerError("");
+
     try {
-      await axios.post("/api/Auth/register", {
-        fullName: formData.fullName,
+      await axios.post("http://localhost:5227/api/Auth/register", {
         email: formData.email,
         password: formData.password,
-        clubName: formData.clubName || undefined,
-        invitationCode: formData.invitationCode || undefined,
+        fullName: formData.fullName,
+        role: "PlatformAdmin",
+        position: null,
+        team: null,
+        dateOfBirth: null,
+        clubName: formData.clubName || null,
+        clubId: null,
+        teamId: null,
+        invitationCode: formData.invitationCode || null,
       });
+
       setSuccess(true);
       setFormData({
         fullName: "",
@@ -79,118 +88,136 @@ export default function RegisterForm() {
         invitationCode: "",
       });
     } catch (err: any) {
-      setServerError(
-        err.response?.data?.message || "Noe gikk galt. Prøv igjen senere."
-      );
+      if (axios.isAxiosError(err)) {
+        console.error("🪵 Axios error response:", err.response?.data);
+
+        const backendData = err.response?.data;
+
+        if (Array.isArray(backendData?.data)) {
+          setServerError(backendData.data.join(" "));
+        } else {
+          setServerError(backendData?.message || "Noe gikk galt. Prøv igjen senere.");
+        }
+      } else {
+        setServerError("Noe gikk galt. Prøv igjen senere.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-800 to-slate-950 p-4">
-      <div className="w-full max-w-md space-y-6 rounded-xl border border-slate-700 bg-slate-900/70 p-6 backdrop-blur-md shadow-xl">
-        <h1 className="text-center text-3xl font-bold text-white">Registrer deg</h1>
-        {serverError && (
-          <p className="rounded-md bg-red-500/20 p-2 text-center text-sm text-red-300">
-            {serverError}
-          </p>
-        )}
-        {success && (
-          <p className="rounded-md bg-green-600/20 p-2 text-center text-sm text-green-300">
-            Sjekk e-posten din for å bekrefte kontoen
-          </p>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="fullName" className="block text-sm font-medium text-white mb-1">
-              Fullt navn
-            </label>
+return (
+  <div className="flex items-center justify-center min-h-screen bg-gradient-to-tr from-[#e6ecf5] to-[#d4ddef] dark:from-slate-900 dark:to-slate-950 p-4">
+    <div className="w-full max-w-md bg-white/80 dark:bg-white/10 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-white/20 shadow-2xl px-8 py-10 space-y-6">
+      <h1 className="text-center text-3xl font-semibold text-slate-900 dark:text-white">Registrer deg</h1>
+
+      {serverError && (
+        <p className="rounded-md bg-red-100 dark:bg-red-500/20 text-center text-sm text-red-600 dark:text-red-300 py-2 px-4">
+          {serverError}
+        </p>
+      )}
+
+      {success && (
+        <p className="rounded-md bg-green-100 dark:bg-green-500/20 text-center text-sm text-green-700 dark:text-green-300 py-2 px-4">
+          Sjekk e-posten din for å bekrefte kontoen
+        </p>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 dark:text-white mb-1">
+            Fullt navn
+          </label>
+          <input
+            id="fullName"
+            name="fullName"
+            type="text"
+            value={formData.fullName}
+            onChange={handleChange}
+            placeholder="Ditt fulle navn"
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white/90 dark:bg-slate-800 text-slate-900 dark:text-white p-3 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.fullName && <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-white mb-1">
+            E-post
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="din@epost.no"
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white/90 dark:bg-slate-800 text-slate-900 dark:text-white p-3 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-white mb-1">
+            Passord
+          </label>
+          <div className="relative">
             <input
-              id="fullName"
-              name="fullName"
-              type="text"
-              value={formData.fullName}
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
               onChange={handleChange}
-              placeholder="Ditt fulle navn"
-              className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Minst 8 tegn"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white/90 dark:bg-slate-800 text-slate-900 dark:text-white p-3 pr-10 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.fullName && <p className="mt-1 text-sm text-red-400">{errors.fullName}</p>}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
-              E-post
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="din@epost.no"
-              className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email}</p>}
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-white mb-1">
-              Passord
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Minst 6 tegn"
-                className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 pr-10 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            {errors.password && <p className="mt-1 text-sm text-red-400">{errors.password}</p>}
-          </div>
-          <div>
-            <label htmlFor="clubName" className="block text-sm font-medium text-white mb-1">
-              Klubbenavn (valgfritt)
-            </label>
-            <input
-              id="clubName"
-              name="clubName"
-              type="text"
-              value={formData.clubName}
-              onChange={handleChange}
-              className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label htmlFor="invitationCode" className="block text-sm font-medium text-white mb-1">
-              Invitasjonskode (valgfritt)
-            </label>
-            <input
-              id="invitationCode"
-              name="invitationCode"
-              type="text"
-              value={formData.invitationCode}
-              onChange={handleChange}
-              className="w-full rounded-md border border-slate-700 bg-slate-800 text-white p-2 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 hover:bg-blue-700 text-white py-2 font-semibold disabled:opacity-50"
-          >
-            {loading ? "Registrerer..." : "Registrer"}
-          </button>
-        </form>
-      </div>
+          {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="clubName" className="block text-sm font-medium text-slate-700 dark:text-white mb-1">
+            Klubbenavn (valgfritt)
+          </label>
+          <input
+            id="clubName"
+            name="clubName"
+            type="text"
+            value={formData.clubName}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white/90 dark:bg-slate-800 text-slate-900 dark:text-white p-3 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="invitationCode" className="block text-sm font-medium text-slate-700 dark:text-white mb-1">
+            Invitasjonskode (valgfritt)
+          </label>
+          <input
+            id="invitationCode"
+            name="invitationCode"
+            type="text"
+            value={formData.invitationCode}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white/90 dark:bg-slate-800 text-slate-900 dark:text-white p-3 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white py-3 font-semibold disabled:opacity-50 transition-colors"
+        >
+          {loading ? "Registrerer..." : "Registrer"}
+        </button>
+      </form>
     </div>
-  );
+  </div>
+);
 }
