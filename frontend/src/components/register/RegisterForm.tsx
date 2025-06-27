@@ -3,6 +3,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
+import styles from "@/styles/register/registerModule.module.css";
+
 
 interface RegisterData {
   fullName: string;
