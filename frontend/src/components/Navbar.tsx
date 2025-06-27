@@ -10,10 +10,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Hjem", href: "/" },
-    { name: "Spillere", href: "/player" },
-    { name: "Økter", href: "/sessions" },
-    { name: "Rapporter", href: "/reports" },
-    { name: "Logg inn", href: "/login" }, // Updated to point to the new login page
+    { name: "Logg inn", href: "/login" },  
   ];
 
   return (
