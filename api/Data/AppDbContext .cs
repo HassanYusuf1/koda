@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using api.Models;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace api.Data
 {
@@ -64,12 +65,20 @@ namespace api.Data
             modelBuilder.Entity<ApplicationUser>()
                 .HasOne(u => u.TeamEntity)
                 .WithMany()
-                .HasForeignKey(u => u.TeamId);
+                .HasForeignKey(u => u.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ApplicationUser>()
                 .HasOne(u => u.Club)
                 .WithMany()
-                .HasForeignKey(u => u.ClubId);
+                .HasForeignKey(u => u.ClubId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Club>()
+                .HasOne(c => c.CreatedByAdmin)
+                .WithMany()
+                .HasForeignKey(c => c.CreatedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
