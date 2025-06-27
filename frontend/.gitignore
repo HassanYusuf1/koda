@@ -17,6 +17,11 @@
 /.next/
 /out/
 
+# .NET build artifacts
+**/obj/
+**/bin/
+
+
 # production
 /build
 
