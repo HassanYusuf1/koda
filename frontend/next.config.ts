@@ -1,10 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  i18n: {
-    locales: ["no", "en"],
-    defaultLocale: "no",
-    localeDetection: true,
-  },
-};
+const nextConfig = {};
 
 export default nextConfig;
