@@ -1,0 +1,56 @@
+/* HomeModule.css */
+
+/* Tilpass farger, font eller ekstra layout */
+.hero-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  
+  .hero-title .highlight {
+    color: #16a34a; /* Tailwind green-600 */
+  }
+  
+  .hero-section {
+    animation: fadeIn 0.7s ease-in-out both;
+  }
+  
+  .cta-button {
+    transition: background-color 0.2s ease;
+  }
+  
+  .cta-button:hover {
+    background-color: #15803d; /* green-700 */
+  }
+  
+  ul li::before {
+    content: '⚽';
+    margin-right: 0.5rem;
+    color: #16a34a;
+  }
+  
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2rem;
+      text-align: center;
+    }
+  
+    .hero-section {
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+    }
+  }
+  
+  /* Enkel fade-in-animasjon */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
