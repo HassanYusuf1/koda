@@ -13,6 +13,7 @@ const Navbar = () => {
     { name: "Spillere", href: "/player" },
     { name: "Økter", href: "/sessions" },
     { name: "Rapporter", href: "/reports" },
+    { name: "Chat", href: "/chat" },
     { name: "Logg inn", href: "/login" }, // Updated to point to the new login page
   ];
 
